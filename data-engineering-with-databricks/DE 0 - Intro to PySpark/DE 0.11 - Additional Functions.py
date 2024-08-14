@@ -110,7 +110,8 @@ print(sales_df.na.drop().count())
 # COMMAND ----------
 
 sales_exploded_df = sales_df.withColumn("items", explode(col("items")))
-display(sales_exploded_df.select("items.coupon"))
+# display(sales_exploded_df)
+# display(sales_exploded_df.select("items.coupon"))
 print(sales_exploded_df.select("items.coupon").count())
 print(sales_exploded_df.select("items.coupon").na.drop().count())
 
