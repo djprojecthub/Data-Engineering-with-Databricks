@@ -1,9 +1,8 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC <div  style="text-align: center; line-height: 0; padding-top: 9px;">
-# MAGIC   <img src="https://raw.githubusercontent.com/derar-alhussein/Databricks-Certified-Data-Engineer-Professional/main/Includes/images/bronze.png" width="60%">
-# MAGIC </div>
+# MAGIC # Overview
+# MAGIC In this notebook we will create a multiplex bronze table that stores all topics of bookstore dataset. Instead of actual kafka topic the data is being pulled from the cloud storage as per the setup of this notebook.
 
 # COMMAND ----------
 
@@ -18,7 +17,7 @@
 
 # MAGIC %md
 # MAGIC ## List raw data files
-# MAGIC Showing raw data at location 'kafka-raw'. Currently, we only have one raw data json file.
+# MAGIC Showing raw data at location 'kafka-raw'. Currently, we only have one raw data json file. We will use Auto loader to read the current file in this directory and detect any new file as they arrive in order to ingest them in multiplex bronze table.
 
 # COMMAND ----------
 
@@ -38,7 +37,11 @@ display(df_raw)
 
 # COMMAND ----------
 
-
+# MAGIC %md
+# MAGIC ## Note
+# MAGIC
+# MAGIC The topic column shows different topics inside the bookstore dataset.
+# MAGIC
 
 # COMMAND ----------
 
@@ -50,20 +53,29 @@ display(df_raw)
 # MAGIC - It also integrates seamlessly with other services in the Azure ecosystem. You can easily ingest data from sources such as Azure Event Hubs and Azure Blob Storage, making it convenient to bring data from various sources into your Delta Lake table. 
 # MAGIC - Autoloader provides options for data transformation and filtering, allowing you to preprocess your streaming data before loading it into the table. This helps streamline your data workflows and optimize data processing efficiency.
 # MAGIC - It is capable of ingesting a variety of file formats, including JSON, CSV, PARQUET, AVRO, ORC, TEXT, and BINARYFILE, and can load data files from various cloud storage services such as AWS S3, Azure Data Lake Storage Gen2, Google Cloud Storage, Azure Blob Storage, ADLS Gen1, and Databricks File System.
-# MAGIC - Auto Loader comes equipped with a Structured Streaming source called cloudFiles, which automatically processes new files as they arrive in an input directory path on the cloud file storage. This source can also process existing files in that directory. Auto Loader can support both Python and SQL in Delta Live Tables.
+# MAGIC - Auto Loader comes equipped with a Structured Streaming source called **cloudFiles**, which automatically processes new files as they arrive in an input directory path on the cloud file storage. This source can also process existing files in that directory. Auto Loader can support both Python and SQL in Delta Live Tables.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Function to process raw data
 # MAGIC
-# MAGIC ### readStream()
+# MAGIC ### processBronze()
 # MAGIC
-# MAGIC - This function reads data from cloud file location assuming real-time data streams at this location.
-# MAGIC - "cloudFiles" format helps to detect any new file arrived in the location specified in load().
-# MAGIC - 
-# MAGIC - Custom schema is defined and passed to schema function.
-# MAGIC - Two new columns are added while reading the data. This shows the capability to process streaming data before writing it to the table.
+# MAGIC - We start by configuring the stream to use the Autoloader by specifying the **cloudFiles** format.
+# MAGIC - Then we configure the Autoloader to use JSON format and we provide schema description.
+# MAGIC - Then we parse timestamp column to human readable timestamp and extract year month.
+# MAGIC - **cloudFiles** format helps to detect any new file arrived in the location specified in load().- 
+# MAGIC - Two new columns are added while reading and before writing the data to the table. This shows the capability to process streaming data before writing it to the table.
+# MAGIC - Lastly, table is partitioned by topic and year_month
+# MAGIC - Notice that we are using **mergeSchema** option to leverage the schema evolution functionality of Autoloader. This will automatically evolve the schema of the table when new fields are detected in input JSON files.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Process raw data
+# MAGIC
+# MAGIC Let us now write a function to incrementally process raw data from source to bronze table.
 
 # COMMAND ----------
 
@@ -91,7 +103,20 @@ def process_bronze():
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Run the function to process incremental batch of data
+# MAGIC Since we are using **availableNow** trigger option our query executed in a batch mode. It processed all available data and then stopped on its own.
+
+# COMMAND ----------
+
 process_bronze()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Register a dataframe using bronze table
+# MAGIC
+# MAGIC **spark.table("table-name")** is used to register a table as a dataframe.
 
 # COMMAND ----------
 
@@ -108,6 +133,11 @@ display(batch_df)
 # MAGIC %sql
 # MAGIC SELECT DISTINCT(topic)
 # MAGIC FROM bronze
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Copy new data to source directory
 
 # COMMAND ----------
 
