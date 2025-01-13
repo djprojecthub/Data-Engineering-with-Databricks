@@ -1,5 +1,16 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC ### Overview
+# MAGIC In this notebook we are going to see how to add check constraint to delta table to improve quality of our data.
+
+# COMMAND ----------
+
 # MAGIC %run ../Includes/Copy-Datasets
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### We can define constraint on our existing delta table
 
 # COMMAND ----------
 
@@ -8,8 +19,20 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Table constraints are listed under the DESCRIBE EXTENDED
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC DESCRIBE EXTENDED orders_silver
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### TEST VIOLATION
+# MAGIC
+# MAGIC The second record violates the constraint. Let see what happens.
 
 # COMMAND ----------
 
@@ -21,6 +44,12 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Atomic transaction
+# MAGIC All transaction in the delta lake table are atomic which means none of the rows will be inserted if the transaction fails.
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC SELECT *
 # MAGIC FROM orders_silver
@@ -28,8 +57,20 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Add another constraint
+# MAGIC Check all order has quantity greater than 0. Note that the error also tells how many rows violates the contraint.
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC ALTER TABLE orders_silver ADD CONSTRAINT valid_quantity CHECK (quantity > 0);
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Is the new constraint listed?
+# MAGIC No, because no data violating the contraint should already be in the table before defining the new constraint.
 
 # COMMAND ----------
 
@@ -42,6 +83,12 @@
 # MAGIC SELECT *
 # MAGIC FROM orders_silver
 # MAGIC where quantity <= 0
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Python API
+# MAGIC As a best practice we should always remove the bad records and then add data to silver table. This way we will be to add check constraints without any error.
 
 # COMMAND ----------
 
@@ -63,6 +110,12 @@ query.awaitTermination()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Drop constraint
+# MAGIC
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC ALTER TABLE orders_silver DROP CONSTRAINT timestamp_within_range;
 
@@ -73,13 +126,14 @@ query.awaitTermination()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC We will add more transformation in the next lectures so dropping the orders_silver for now and removing its checkpoint.
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC DROP TABLE orders_silver
 
 # COMMAND ----------
 
 dbutils.fs.rm("dbfs:/mnt/demo_pro/checkpoints/orders_silver", True)
-
-# COMMAND ----------
-
-
