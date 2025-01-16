@@ -1,9 +1,9 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC <div  style="text-align: center; line-height: 0; padding-top: 9px;">
-# MAGIC   <img src="https://raw.githubusercontent.com/derar-alhussein/Databricks-Certified-Data-Engineer-Professional/main/Includes/images/books.png" width="60%">
-# MAGIC </div>
+# MAGIC ### Overview
+# MAGIC
+# MAGIC Practical implementation of Type 2 SCD.
 
 # COMMAND ----------
 
@@ -11,9 +11,14 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC **NOTE**
+# MAGIC - This cell contains the SQL query for your reference, and won't work if run directly.
+# MAGIC - The query is used below in the type2_upsert() function as part of the foreachBatch call.
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC -- NOTE: This cell contains the SQL query for your reference, and won't work if run directly.
-# MAGIC -- The query is used below in the type2_upsert() function as part of the foreachBatch call.
 # MAGIC
 # MAGIC MERGE INTO books_silver
 # MAGIC USING (
@@ -64,9 +69,19 @@ def type2_upsert(microBatchDF, batch):
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Create target silver table for merge
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS books_silver
 # MAGIC (book_id STRING, title STRING, author STRING, price DOUBLE, current BOOLEAN, effective_date TIMESTAMP, end_date TIMESTAMP)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Streaming function to process books data. This function calls **type2_upsert()** function for each batch of data, which in turn runs **merge** statement to implement Type2 SCD on target **books_silver** table.
 
 # COMMAND ----------
 

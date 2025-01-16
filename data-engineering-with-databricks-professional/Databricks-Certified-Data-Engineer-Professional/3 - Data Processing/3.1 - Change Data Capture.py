@@ -1,13 +1,20 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC <div  style="text-align: center; line-height: 0; padding-top: 9px;">
-# MAGIC   <img src="https://raw.githubusercontent.com/derar-alhussein/Databricks-Certified-Data-Engineer-Professional/main/Includes/images/customers.png" width="60%">
-# MAGIC </div>
+# MAGIC ### Overview
+# MAGIC
+# MAGIC In this notebook we will create **Customer silver table**. The data in the customers topic contains complete row output from a **Change Data Capture** feed. The changes captured are either insert, update or delete.
 
 # COMMAND ----------
 
 # MAGIC %run ../Includes/Copy-Datasets
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC - The below query unpacks **value** column of **Customers** topic and maps it to the defined schema.
+# MAGIC - Load rows in dataframe **customer_df** which needs to inserted or updated.
+# MAGIC
 
 # COMMAND ----------
 
@@ -25,6 +32,21 @@ display(customers_df)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Notice the duplicate **customer_id** and check their **row_time** column value.
+
+# COMMAND ----------
+
+display(customers_df.orderBy("customer_id"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC - This query only keeps the rows in **ranked_df** with latest datetime value for each customer_id because data is partitioned by customer_id and rank 1 is assigned to the row with highest row_time value.
+# MAGIC - This tells the most recent operation to be applied based on the value of **row_status** column.
+
+# COMMAND ----------
+
 from pyspark.sql.window import Window
 
 window = Window.partitionBy("customer_id").orderBy(F.col("row_time").desc())
@@ -36,7 +58,12 @@ display(ranked_df)
 
 # COMMAND ----------
 
-# This will throw an exception because non-time-based window operations are not supported on streaming DataFrames.
+# MAGIC %md
+# MAGIC **Caution**<br/>
+# MAGIC This will throw an exception because non-time-based window operations are not supported on streaming DataFrames.
+
+# COMMAND ----------
+
 ranked_df = (spark.readStream
                    .table("bronze")
                    .filter("topic = 'customers'")
@@ -49,6 +76,12 @@ ranked_df = (spark.readStream
              )
 
 display(ranked_df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **Fix**<br/>
+# MAGIC To apply non-based window operation on streaming dataframe use foreachBatch logic.
 
 # COMMAND ----------
 
@@ -77,14 +110,34 @@ def batch_upsert(microBatchDF, batchId):
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Create **customers_silver** target table
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS customers_silver
 # MAGIC (customer_id STRING, email STRING, first_name STRING, last_name STRING, gender STRING, street STRING, city STRING, country STRING, row_time TIMESTAMP)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Load country lookup data in the dataframe. We will use this to join customer information.
+
+# COMMAND ----------
+
 df_country_lookup = spark.read.json(f"{dataset_bookstore}/country_lookup")
 display(df_country_lookup)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### The MAGIC!!!
+# MAGIC - Performing readStream join of the customer and their country dataset. Please note that the lookup table is smaller.
+# MAGIC - **Broadcast join** is an optimization technique where the smaller dataframe will be sent to all executer node in the cluster.
+# MAGIC - To allow broadcast join you just need to mark which dataframe is small enough for broadcasting using the broadcast() function.
+# MAGIC - This gives a hint to spark that these dataframe can fit in memory on all executors.
+# MAGIC - Lastly, the foreachBatch () is executed for each batch of data.
 
 # COMMAND ----------
 
@@ -110,7 +163,3 @@ expected_count = spark.table("customers_silver").select("customer_id").distinct(
 
 assert count == expected_count
 print("Unit test passed.")
-
-# COMMAND ----------
-
-
