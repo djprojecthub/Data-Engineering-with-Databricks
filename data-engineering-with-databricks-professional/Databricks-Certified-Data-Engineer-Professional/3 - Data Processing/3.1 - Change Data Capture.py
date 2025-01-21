@@ -1,7 +1,17 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### Overview
+# MAGIC #Overview
+# MAGIC
+# MAGIC ### Change Data Capture
+# MAGIC CDC is process of identifying changes made to data in the source and delivering those changes to the target. Those changes could be...
+# MAGIC - Inserting new records
+# MAGIC - Updating existing records
+# MAGIC - Deleting existing records
+# MAGIC
+# MAGIC Changes are logged at the source as events the contains both the data of the records and the metadata information. These metadata information records whether the specified record was inserted, updated or deleted.
+# MAGIC
+# MAGIC **CDC feed** = Raw data + metadata. In delta lake, you can process CDC feed using **Merge Into...** command.
 # MAGIC
 # MAGIC In this notebook we will create **Customer silver table**. The data in the customers topic contains complete row output from a **Change Data Capture** feed. The changes captured are either insert, update or delete.
 
@@ -42,6 +52,7 @@ display(customers_df.orderBy("customer_id"))
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC - For duplicate customer_id we need to identify the most recent change which we can be done using rank function.
 # MAGIC - This query only keeps the rows in **ranked_df** with latest datetime value for each customer_id because data is partitioned by customer_id and rank 1 is assigned to the row with highest row_time value.
 # MAGIC - This tells the most recent operation to be applied based on the value of **row_status** column.
 
