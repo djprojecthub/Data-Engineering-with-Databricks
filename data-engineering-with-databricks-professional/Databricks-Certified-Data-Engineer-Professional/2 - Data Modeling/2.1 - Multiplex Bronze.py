@@ -1,6 +1,14 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
+# MAGIC <div  style="text-align: center; line-height: 0; padding-top: 9px;">
+# MAGIC   <img src="https://raw.githubusercontent.com/derar-alhussein/Databricks-Certified-Data-Engineer-Professional/main/Includes/images/bronze.png" width="60%">
+# MAGIC </div>
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC
 # MAGIC # Overview
 # MAGIC In this notebook we will create a multiplex bronze table that stores all topics of bookstore dataset. Instead of actual kafka topic the data is being pulled from the cloud storage as per the setup of this notebook.
 
