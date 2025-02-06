@@ -49,7 +49,7 @@
 
 # MAGIC %md
 # MAGIC ## Streaming read
-# MAGIC Convert the static bronze table to streaming temporary view. This allow use to write streaming queries with Spark SQL.
+# MAGIC Convert the static bronze table to streaming temporary view. This allow user to write streaming queries with Spark SQL.
 
 # COMMAND ----------
 
