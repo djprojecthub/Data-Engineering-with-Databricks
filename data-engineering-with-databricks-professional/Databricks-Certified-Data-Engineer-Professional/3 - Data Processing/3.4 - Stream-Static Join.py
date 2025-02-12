@@ -7,6 +7,13 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Overview
+# MAGIC
+# MAGIC In this notebook, we will see how stream-staic join is performed. The important thing to note is stream part of join is responsible for join resultset and updates to the static table are reflected in the new batch execution. Only the common records occurs in the final resultset.
+
+# COMMAND ----------
+
 # MAGIC %run ../Includes/Copy-Datasets
 
 # COMMAND ----------
@@ -68,7 +75,3 @@ process_books_sales()
 
 # MAGIC %sql
 # MAGIC SELECT count(*) FROM books_sales
-
-# COMMAND ----------
-
-

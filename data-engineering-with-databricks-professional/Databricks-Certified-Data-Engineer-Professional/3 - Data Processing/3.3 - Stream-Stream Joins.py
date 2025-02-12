@@ -7,7 +7,21 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Overview
+# MAGIC
+# MAGIC In this notebook, we are going to see how use CDF data to propagate changes to downstream tables. We will create a `customers_orders` silver table by joining `orders` table with CDF data of `customers` table.
+
+# COMMAND ----------
+
 # MAGIC %run ../Includes/Copy-Datasets
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC - The below query creates a `batch_upsert` function which defines a window, loads batch data into a temporary view by ranking the data using window and then runs MERGE query to update or insert changed or new records.
+# MAGIC - Composite key is used in the partition and latest `_commit_timestamp` is used in each parition or group.
+# MAGIC - For each batch of data the records to be insert or update is identified using `_change_type` column value.
 
 # COMMAND ----------
 
@@ -38,9 +52,21 @@ def batch_upsert(microBatchDF, batchId):
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Create `customers_orders` silver table.
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS customers_orders
 # MAGIC (order_id STRING, order_timestamp Timestamp, customer_id STRING, quantity BIGINT, total BIGINT, books ARRAY<STRUCT<book_id STRING, quantity BIGINT, subtotal BIGINT>>, email STRING, first_name STRING, last_name STRING, gender STRING, street STRING, city STRING, country STRING, row_time TIMESTAMP, processed_timestamp TIMESTAMP)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC - Streaming query to write data to `customer_orders` silver table.
+# MAGIC - Reads `orders_silver` and CDF data of `customers_silver` as source into their respective dataframe.
+# MAGIC - The two dataframe are then joined based on the `"customer_id"` column. This joined data is then written to `customer_orders` silver table using `foreachBatch()` operation.
 
 # COMMAND ----------
 

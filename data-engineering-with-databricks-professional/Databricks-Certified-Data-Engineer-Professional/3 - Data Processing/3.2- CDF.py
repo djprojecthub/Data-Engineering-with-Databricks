@@ -1,5 +1,13 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
+# MAGIC
+# MAGIC <div  style="text-align: center; line-height: 0; padding-top: 9px;">
+# MAGIC   <img src="https://raw.githubusercontent.com/derar-alhussein/Databricks-Certified-Data-Engineer-Professional/main/Includes/images/CDF.png" width="60%">
+# MAGIC </div>
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
 # MAGIC # Overview
 # MAGIC In this notebook, we will see how to enable CDF on delta lake table called `customer_silver` table and to show column highlighting table changes.
 # MAGIC ### What is CDF?
@@ -10,7 +18,6 @@
 # MAGIC - CDF follows same retention policy of the table. When running VACUUM, CDF data is also deleted.
 # MAGIC - **Use CDF when** table's changes include update and/or delete and small fraction of records updated in each batch.
 # MAGIC - **Do not use CDF when** table's changes are append only or most records in the table updated in each batch.
-# MAGIC - Small
 # MAGIC - Enable CDF using command <br/>
 # MAGIC > `spark.databricks.delta.properties.defaults.enableChangeDataFeed`<br/>
 # MAGIC >   </t></t>OR<br/>
