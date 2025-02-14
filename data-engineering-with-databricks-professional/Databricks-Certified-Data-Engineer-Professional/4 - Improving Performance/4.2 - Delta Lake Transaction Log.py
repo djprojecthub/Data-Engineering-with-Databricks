@@ -23,7 +23,3 @@ display(files)
 # COMMAND ----------
 
 display(spark.read.parquet("dbfs:/user/hive/warehouse/bookstore_eng_pro.db/bronze/_delta_log/00000000000000000010.checkpoint.parquet"))
-
-# COMMAND ----------
-
-
